@@ -1,0 +1,14 @@
+data:
+  raw_path: "data/raw/criteo_sample.csv"
+  processed_path: "data/processed/criteo_processed.pt"
+  batch_size: 1024
+  hash_size: 100000  # Size of the Hashing Trick bucket
+
+model:
+  hidden_dim: 64
+  dropout: 0.2
+  learning_rate: 0.001
+  epochs: 10
+
+uplift:
+  assumption: 0.2  # The synthetic uplift effect we assume for training
