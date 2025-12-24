@@ -12,7 +12,14 @@ __pycache__/
 
 # Ignore the data folder
 data/
+*.csv
+*.gz
+
 
 # Ignore Jupyter notebooks
 notebooks/
 .ipynb_checkpoints/
+
+
+# macOS noise
+.DS_Store
