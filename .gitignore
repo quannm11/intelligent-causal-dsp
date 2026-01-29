@@ -9,3 +9,10 @@ __pycache__/
 .vscode/
 .idea/
 
+data/
+models/
+results/
+*.joblib
+*.parquet
+__pycache__/
+venv/
