@@ -18,42 +18,38 @@ features = [f'f{i}' for i in range(12)] + \
 target = 'conversion'
 
 def train_and_calibrate():
-    # Split by Treatment for the T-Learner architecture
     groups = [(1, "treatment"), (0, "control")]
     
     for group_id, label in groups:
         print(f"\n--- Processing {label.upper()} Model ---")
         
-        # Filter data for this specific learner
         X_train = train_df[train_df['treatment'] == group_id][features]
         y_train = train_df[train_df['treatment'] == group_id][target]
-        
         X_val = val_df[val_df['treatment'] == group_id][features]
         y_val = val_df[val_df['treatment'] == group_id][target]
         
-        # Base Model Training
-        print(f"Training base XGBoost for {label}...")
         base_model = xgb.XGBClassifier(
             n_estimators=100,
             max_depth=5,
             learning_rate=0.1,
-            tree_method='hist', # Faster on cluster
+            tree_method='hist',
             random_state=42
         )
+        print(f"Fitting base XGBoost on Training Set")
         base_model.fit(X_train, y_train)
         
-        # Calibration 
-        print(f"Calibrating {label} probabilities using Validation Set...")
+        print(f"Calibrating using dedicated Validation Set")
         calibrated_model = CalibratedClassifierCV(
-            base_model, 
+            estimator=base_model, 
             method='isotonic', 
-            cv='prefit'
+            cv=None,           
+            ensemble=False    
         )
-        calibrated_model.fit(X_val, y_val)
         
+        calibrated_model.fit(X_val, y_val)        
         model_path = os.path.join(MODEL_DIR, f"t_learner_{label}.joblib")
         joblib.dump(calibrated_model, model_path)
-        print(f"Successfully saved: {model_path}")
+        print(f"Successfully saved calibrated model: {model_path}")
 
 if __name__ == "__main__":
     train_and_calibrate()
