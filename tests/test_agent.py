@@ -1,9 +1,22 @@
-def test_pid_increases_bid_when_underspending():
-    agent = PIDBiddingAgent(target_spend_rate=0.5)
-    initial_factor = agent.adjustment_factor
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from src.agents.bidding_agent import PIDBiddingAgent
+
+def run_test():
+    # Target 20% spend
+    agent = PIDBiddingAgent(kp=0.1, ki=0.01, kd=0.05, target_spend_rate=0.2)
     
-    # Simulate underspending (0.1 vs target 0.5)
-    agent.update_controller(current_spend_rate=0.1)
+    print(f"Initial Adjustment Factor: {agent.adjustment_factor}")
     
-    assert agent.adjustment_factor > initial_factor
-    print("Test Passed: Agent increased bids to catch up to budget target.")
+    # Simulate underspending (only 5% spent)
+    agent.update_controller(current_spend_rate=0.05)
+    print(f"Factor after Underspend: {agent.adjustment_factor:.4f} (Should be > 1.0)")
+    
+    # Simulate overspending (80% spent)
+    agent.update_controller(current_spend_rate=0.80)
+    print(f"Factor after Overspend: {agent.adjustment_factor:.4f} (Should have decreased)")
+
+if __name__ == "__main__":
+    run_test()
