@@ -2,7 +2,6 @@ venv/
 wandb/
 outputs/
 data/
-notebooks/
 __pycache__/
 .DS_Store
 .env
