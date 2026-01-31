@@ -23,3 +23,8 @@ notebooks/
 
 # macOS noise
 .DS_Store
+
+# .dockerignore
+data/
+results/*.parquet
+models/*.joblib
