@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.agents.bidding_agent import PIDBiddingAgent
+from uplift_project.src.agents.agent import PIDBiddingAgent
 
 def run_test():
     # Target 20% spend
