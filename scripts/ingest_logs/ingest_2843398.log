@@ -1,3 +1,0 @@
-Job started on scf-sm10
-Starting Stream Processing -> criteo_uplift_full.parquet
-slurmstepd-scf-sm10: error: *** JOB 2843398 ON scf-sm10 CANCELLED AT 2026-01-05T00:27:24 ***
