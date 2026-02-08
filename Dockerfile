@@ -1,25 +1,21 @@
-# 1. Upgrade to 3.11 for faster dictionary lookups and ML performance
-FROM python:3.11-slim
+FROM python:3.9-slim
 
 WORKDIR /app
 
-# 2. Keep your system dependencies + add libgomp1 for XGBoost
-RUN apt-get update && apt-get install -y \
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libgomp1 \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Leverage caching for dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 4. Copy code and artifacts
-COPY . .
+COPY src/ src/
+COPY config.yaml .
+COPY data/ data/
 
-# 5. Document the Bidding API port
-EXPOSE 8000
+RUN mkdir -p models
 
-# 6. Default to running the FastAPI app (Day 18 setup)
-# This assumes your FastAPI instance is named 'app' inside 'src/main.py'
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "src/06_simulation_comparison.py"]
