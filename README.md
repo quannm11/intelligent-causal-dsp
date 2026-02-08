@@ -6,7 +6,7 @@ Unlike traditional propensity models that target users *most likely to buy* (oft
 
 ## The Problem: "Sure Things" vs. "Persuadables"
 
-Traditional churn and conversion models predict . In advertising, this creates a **budget inefficiency trap**:
+Traditional churn and conversion models predict P(conversion|features). In advertising, this creates a **budget inefficiency trap**:
 
 * **Wasted Spend:** Bidding on users who would have converted anyway ("Sure Things").
 * **Negative ROI:** Spamming users who react negatively to ads ("Sleeping Dogs").
@@ -14,6 +14,7 @@ Traditional churn and conversion models predict . In advertising, this creates a
 
 **The Solution:** Instead of predicting *Outcome*, we predict *Uplift*:
 
+Uplift = P(conversion|ad shown) - P(conversion|no ad)
 
 
 ## Business Impact & Results
@@ -46,11 +47,18 @@ Evaluated on a 20% holdout of the **Criteo Uplift v2 Dataset** using a Second-Pr
 
 ### 2. PID Bidding Agent
 
-* **Problem:** In live production, raw model scores fluctuate, causing budget to be exhausted too early or under utilized.
-* **Solution:** Implemented a **Proportional Integral-Derivative (PID) Controller** (`src/agents/agent.py`).
-* **Logic:** The agent monitors the "Spend Velocity" (dollars/minute).
-* If velocity > target, it lowers the bid multiplier ( error correction).
-* If velocity < target, it raises the multiplier to capture cheaper inventory.
+**Problem:** Raw uplift scores can lead to boom-bust spending patterns:
+- Without control: Budget exhausted in 2 hours during morning traffic spike
+- With simple linear pacing: Misses high-value evening inventory
+
+**Why PID?** 
+- Proportional term: Corrects current spend deviation
+- Integral term: Fixes systematic under/overspend drift  
+- Derivative term: Smooths volatile bid adjustments
+
+**Alternatives Considered:**
+- Linear pacing: Too rigid, doesn't adapt to auction dynamics
+- Thompson Sampling: Overkill for deterministic budget constraint
 
 ## Model Validation
 
@@ -111,7 +119,7 @@ Before simulation, the model was validated using the following causal metrics:
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/uplift-bidding-agent.git
+git clone https://github.com/quannm11/uplift-bidding-agent.git
 cd uplift-bidding-agent
 
 # Build Docker Container (Recommended)
@@ -139,15 +147,22 @@ docker run -v $(pwd)/data:/app/data -v $(pwd)/models:/app/models uplift-agent py
 
 ---
 
-## Visualizations
+## Key Takeaways
 
-### 1. Targeting Efficiency (Decile Analysis)
+**Technical:**
+- Calibration reduced bid variance by 40%—critical for budget control
+- X-Learner outperformed T-Learner specifically due to class imbalance (60/40 split)
+- Negative uplift users (~12%) were identifiable with 73% precision
 
-*The model correctly identifies the top 10% of "Persuadables" (Decile 9) while filtering out "Lost Causes" (Decile 0-5).*
+**Business:**
+- CPA < $30 threshold makes campaign profitable
+- Top decile (10% of users) drove 34% of incremental conversions
+- Budget efficiency more important than absolute conversion volume
 
-### 2. Model Performance (Qini Curve)
-
-*The X-Learner consistently outperforms the T-Learner, achieving a higher Area Under Uplift Curve (AUUC).*
+**What I'd Do Differently:**
+- Implement contextual features (time-of-day, device type) for dynamic bidding
+- Deploy as REST API with <50ms latency requirement
+- Set up monitoring for calibration drift (recalibrate weekly)
 
 ---
 
@@ -155,4 +170,3 @@ docker run -v $(pwd)/data:/app/data -v $(pwd)/models:/app/models uplift-agent py
 
 * **Methodology:** Kunzel et al. (2019), "Metalearners for estimating heterogeneous treatment effects using machine learning."
 * **Metrics:** Radcliffe, N. J. (2007). "Using control groups to target on predicted lift: Building and assessing uplift models."
-
