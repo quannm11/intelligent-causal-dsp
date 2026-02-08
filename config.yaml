@@ -1,14 +1,29 @@
-data:
-  raw_path: "data/raw/criteo_sample.csv"
-  processed_path: "data/processed/criteo_processed.pt"
-  batch_size: 1024
-  hash_size: 100000  # Size of the Hashing Trick bucket
+project:
+  name: "uplift_bidding_agent"
+  version: "1.0.0"
 
-model:
-  hidden_dim: 64
-  dropout: 0.2
-  learning_rate: 0.001
-  epochs: 10
+paths:
+  data_raw: "data/raw"
+  data_processed: "data/processed/test_data.parquet"
+  models_dir: "models"
+  output_dir: "output"
 
-uplift:
-  assumption: 0.2  # The synthetic uplift effect we assume for training
+modeling:
+  test_size: 0.2
+  random_state: 42
+  validation_folds: 5
+
+hyperparameters:
+  t_learner:
+    n_estimators: 100
+    max_depth: 3
+    learning_rate: 0.1
+  x_learner:
+    n_estimators: 200
+    max_depth: 4
+    learning_rate: 0.05
+
+simulation:
+  budget: 10000
+  cost_threshold: 0.10
+  revenue_per_conversion: 10.0

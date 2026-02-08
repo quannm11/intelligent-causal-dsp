@@ -1,42 +1,33 @@
 import os
+import yaml
 from pathlib import Path
-from dotenv import load_dotenv
 
-# Project Root 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-load_dotenv(PROJECT_ROOT / ".env")
+current_path = Path(__file__).resolve()
+project_root = current_path.parent.parent
 
-# Directory Definitions
-DATA_DIR = Path(os.getenv("DATA_DIR", PROJECT_ROOT / "data"))
-MODEL_DIR = Path(os.getenv("MODEL_DIR", PROJECT_ROOT / "models" / "v2"))
-RESULT_DIR = Path(os.getenv("RESULT_DIR", PROJECT_ROOT / "results"))
+# Load YAML Config
+config_path = project_root / "config.yaml"
 
-# Ensure directories exist
-for path in [DATA_DIR, MODEL_DIR, RESULT_DIR]:
-    path.mkdir(parents=True, exist_ok=True)
+if config_path.exists():
+    with open(config_path, "r") as f:
+        cfg = yaml.safe_load(f)
+else:
+    raise FileNotFoundError(f"Config file not found at {config_path}")
 
-# File Path Definitions
-RAW_DATA_PATH = DATA_DIR / "criteo_uplift.csv.gz"
-TRAIN_DATA = DATA_DIR / "v2_engineered" / "train_data.parquet"
-VAL_DATA = DATA_DIR / "v2_engineered" / "val_data.parquet"
-TEST_DATA = DATA_DIR / "v2_engineered" / "test_data.parquet"
-PREDICTIONS_PATH = RESULT_DIR / "final_test_predictions.parquet"
+DATA_DIR = project_root / cfg['paths']['data_raw']
+TEST_DATA = project_root / cfg['paths']['data_processed']
+MODEL_DIR = project_root / cfg['paths']['models_dir']
+MODEL_DIR.mkdir(exist_ok=True)
 
-# Model Paths
-T_MODEL_PATH = MODEL_DIR / "t_learner_treatment.joblib"
-C_MODEL_PATH = MODEL_DIR / "t_learner_control.joblib"
+# File Paths for Models
+T_MODEL_PATH = MODEL_DIR / "t_learner_baseline.joblib"
+C_MODEL_PATH = MODEL_DIR / "control_model.joblib"
 
-# Feature Definitions 
-BASE_FEATURES = [f'f{i}' for i in range(12)]
-ENGINEERED_FEATURES = [
-    'user_freq', 
-    'f3_sq', 'f8_sq', 'f6_sq', 
-    'f3_f6_inter', 'f2_f9_inter'
-]
-FEATURES = BASE_FEATURES + ENGINEERED_FEATURES
-TARGET = 'conversion'
-TREATMENT = 'treatment'
+# Feature Definition
+FEATURES = ['user_freq'] + [f'f{i}' for i in range(20)]
 
-# Global Constants
-CONVERSION_VALUE = float(os.getenv("CONVERSION_VALUE", 100.0))
-SEED = 42
+# Hyperparameters 
+PARAMS = cfg['hyperparameters']
+SIM_PARAMS = cfg['simulation']
+
+print(f"Configuration loaded from {config_path}")
