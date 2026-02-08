@@ -17,9 +17,9 @@ for path in [DATA_DIR, MODEL_DIR, RESULT_DIR]:
 
 # File Path Definitions
 RAW_DATA_PATH = DATA_DIR / "criteo_uplift.csv.gz"
-TRAIN_DATA = DATA_DIR / "v2_engineered" / "train_data"
-VAL_DATA = DATA_DIR / "v2_engineered" / "val_data"
-TEST_DATA = DATA_DIR / "v2_engineered" / "test_data"
+TRAIN_DATA = DATA_DIR / "v2_engineered" / "train_data.parquet"
+VAL_DATA = DATA_DIR / "v2_engineered" / "val_data.parquet"
+TEST_DATA = DATA_DIR / "v2_engineered" / "test_data.parquet"
 PREDICTIONS_PATH = RESULT_DIR / "final_test_predictions.parquet"
 
 # Model Paths

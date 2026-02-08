@@ -6,8 +6,10 @@ import joblib
 import pandas as pd
 import xgboost as xgb
 from sklearn.calibration import CalibratedClassifierCV
+from sklearn.model_selection import PredefinedSplit
 from sklearn.metrics import roc_auc_score
 from pathlib import Path
+
 
 current_file = Path(__file__).resolve()
 project_root = current_file.parent.parent
@@ -38,7 +40,7 @@ def parse_args():
     
     return parser.parse_args()
 
-def train_and_calibrate():
+def train_and_calibrate(args):
     logger.info("Loading Training and Validation data")
     
     try:
@@ -61,6 +63,12 @@ def train_and_calibrate():
         X_val = val_df[val_df[TREATMENT] == group_id][FEATURES]
         y_val = val_df[val_df[TREATMENT] == group_id][TARGET]
         
+        X_full = pd.concat([X_train, X_val], axis=0)
+        y_full = pd.concat([y_train, y_val], axis=0)
+        
+        split_index = ([-1] * len(X_train)) + ([0] * len(X_val))
+        pds = PredefinedSplit(test_fold=split_index)
+
         logger.info(f"Training XGBoost on {len(X_train)} samples with {len(FEATURES)} features")
         logger.debug(f"Params: LR={args.learning_rate}, Depth={args.max_depth}, Est={args.n_estimators}")
 
@@ -72,20 +80,16 @@ def train_and_calibrate():
             tree_method='hist', 
             random_state=42
         )
-        base_model.fit(X_train, y_train)
-        
-        train_auc = roc_auc_score(y_train, base_model.predict_proba(X_train)[:, 1])
-        logger.info(f"Base Model Train AUC: {train_auc:.4f}")
-        
+                
         logger.info("Calibrating probabilities using Isotonic Regression")
         calibrated_model = CalibratedClassifierCV(
             estimator=base_model, 
             method='isotonic', 
-            cv='prefit' 
-        )
-        calibrated_model.fit(X_val, y_val)
+            cv=pds
+        )        
+        calibrated_model.fit(X_full, y_full)
         
-        logger.info(f"Saving calibrated model to {save_path}...")
+        logger.info(f"Saving calibrated model to {save_path}")
         joblib.dump(calibrated_model, save_path)
 
     logger.info("Training pipeline completed successfully.")
